@@ -1769,13 +1769,18 @@ __hostdev__ static inline uint32_t FindHighestOn(uint64_t v)
 
 // ----------------------------> CountOn <--------------------------------------
 
+// V-Ray specific: Our CUDA compilers does not support built-in popcnt functions
+// We need to fallback to the software implementation. Uncomment this when CUDA
+// host compilers are updated.
+// #define VRAY_ENABLE_BUILTIN_POPCNT 0
+
 /// @return Number of bits that are on in the specified 64-bit word
 NANOVDB_HOSTDEV_DISABLE_WARNING
 __hostdev__ inline uint32_t CountOn(uint64_t v)
 {
-#if defined(_MSC_VER) && defined(_M_X64)
+#if defined(_MSC_VER) && defined(_M_X64) && defined(VRAY_ENABLE_BUILTIN_POPCNT)
     v = __popcnt64(v);
-#elif (defined(__GNUC__) || defined(__clang__))
+#elif (defined(__GNUC__) || defined(__clang__)) && defined(VRAY_ENABLE_BUILTIN_POPCNT)
     v = __builtin_popcountll(v);
 #else
     // Software Implementation
